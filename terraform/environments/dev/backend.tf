@@ -4,10 +4,10 @@
 
 terraform {
   backend "s3" {
-    bucket         = "pet-terraform-state-325779841182"
-    key            = "petclinic/dev/terraform.tfstate"
-    region         = "eu-central-1"
-    encrypt        = true
-    use_lockfile = true 
+    bucket       = "pet-terraform-state-325779841182"
+    key          = "petclinic/dev/terraform.tfstate"
+    region       = "eu-central-1"
+    encrypt      = true
+    use_lockfile = true
   }
 }

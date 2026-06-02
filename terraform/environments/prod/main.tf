@@ -70,8 +70,8 @@ module "rds" {
   allocated_storage       = 20
   max_allocated_storage   = 20
   multi_az                = false
-  backup_retention_period = 7
-  skip_final_snapshot     = true
+  backup_retention_period = 30
+  skip_final_snapshot     = false
   deletion_protection     = false
 }
 

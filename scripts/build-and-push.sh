@@ -61,16 +61,16 @@ if [[ "$(uname -m)" != "aarch64" && "$(uname -m)" != "arm64" ]]; then
   docker buildx create --use --name petclinic-builder 2>/dev/null || docker buildx use petclinic-builder
 fi
 
-# Service name mapping: maven module suffix -> ECR repo short name
-declare -A SERVICES=(
-  ["config-server"]="config-server"
-  ["discovery-server"]="discovery-server"
-  ["api-gateway"]="api-gateway"
-  ["customers-service"]="customers-service"
-  ["visits-service"]="visits-service"
-  ["vets-service"]="vets-service"
-  ["genai-service"]="genai-service"
-  ["admin-server"]="admin-server"
+# List of all 8 services
+SERVICES=(
+  config-server
+  discovery-server
+  api-gateway
+  customers-service
+  visits-service
+  vets-service
+  genai-service
+  admin-server
 )
 
 # Build all images using the Maven Spring Boot build plugin
@@ -83,10 +83,9 @@ cd "$APP_DIR"
 echo ""
 echo "==> Tagging and pushing images to ECR"
 
-for SERVICE in "${!SERVICES[@]}"; do
-  ECR_REPO="${SERVICES[$SERVICE]}"
+for SERVICE in "${SERVICES[@]}"; do
   LOCAL_IMAGE="springcommunity/spring-petclinic-${SERVICE}"
-  ECR_URI="${REGISTRY}/petclinic-${ENV}/${ECR_REPO}:${TAG}"
+  ECR_URI="${REGISTRY}/petclinic-${ENV}/${SERVICE}:${TAG}"
 
   echo "  ${LOCAL_IMAGE} -> ${ECR_URI}"
   docker tag "${LOCAL_IMAGE}" "${ECR_URI}"
@@ -97,6 +96,6 @@ echo ""
 echo "All 8 images pushed successfully."
 echo ""
 echo "ECR repositories:"
-for SERVICE in "${!SERVICES[@]}"; do
-  echo "  ${REGISTRY}/petclinic-${ENV}/${SERVICES[$SERVICE]}:${TAG}"
+for SERVICE in "${SERVICES[@]}"; do
+  echo "  ${REGISTRY}/petclinic-${ENV}/${SERVICE}:${TAG}"
 done

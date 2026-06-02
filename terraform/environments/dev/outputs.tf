@@ -33,6 +33,17 @@ output "rds_endpoint" {
   value       = module.rds.endpoint
 }
 
+output "rds_connection_string" {
+  description = "JDBC connection string for SPRING_DATASOURCE_URL"
+  value       = module.rds.connection_string
+  sensitive   = true
+}
+
+output "rds_db_name" {
+  description = "RDS database name"
+  value       = module.rds.db_name
+}
+
 output "rds_secret_arn" {
   description = "Secrets Manager ARN for RDS credentials"
   value       = module.rds.secret_arn
