@@ -4,7 +4,7 @@
 
 terraform {
   backend "s3" {
-    bucket       = "pet-terraform-state-325779841182"
+    bucket       = "petclinic-terraform-state-893410593881"
     key          = "petclinic/dev/terraform.tfstate"
     region       = "eu-central-1"
     encrypt      = true
