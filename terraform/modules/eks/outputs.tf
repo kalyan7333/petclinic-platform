@@ -34,6 +34,11 @@ output "node_role_arn" {
   value       = aws_iam_role.node.arn
 }
 
+output "node_role_name" {
+  description = "Node IAM role name (consumed by the karpenter module for the instance profile and iam:PassRole scoping)"
+  value       = aws_iam_role.node.name
+}
+
 output "ebs_csi_role_arn" {
   description = "IRSA role ARN for the EBS CSI driver"
   value       = aws_iam_role.ebs_csi.arn

@@ -15,7 +15,7 @@ APP_DIR=""
 PLATFORM="linux/arm64"
 
 usage() {
-  echo "Usage: $0 --env <dev|prod> --tag <image-tag> [--app-dir <path>] [--region <region>]"
+  echo "Usage: $0 --env <dev> --tag <image-tag> [--app-dir <path>] [--region <region>]"
   exit 1
 }
 
@@ -30,7 +30,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ -z "$ENV" || -z "$TAG" ]] && usage
-[[ "$ENV" != "dev" && "$ENV" != "prod" ]] && { echo "env must be dev or prod" >&2; exit 1; }
+[[ "$ENV" != "dev" ]] && { echo "env must be dev — this platform is dev-only" >&2; exit 1; }
 
 # Default app dir: sibling directory named spring-petclinic-microservices
 if [[ -z "$APP_DIR" ]]; then

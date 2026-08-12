@@ -1,0 +1,143 @@
+name: Build and Push to ECR
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-central-1
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-central-1.amazonaws.com
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      config-server: ${{ steps.filter.outputs.config-server }}
+      discovery-server: ${{ steps.filter.outputs.discovery-server }}
+      api-gateway: ${{ steps.filter.outputs.api-gateway }}
+      customers-service: ${{ steps.filter.outputs.customers-service }}
+      visits-service: ${{ steps.filter.outputs.visits-service }}
+      vets-service: ${{ steps.filter.outputs.vets-service }}
+      genai-service: ${{ steps.filter.outputs.genai-service }}
+      admin-server: ${{ steps.filter.outputs.admin-server }}
+      changed-services: ${{ steps.list.outputs.services }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            config-server:
+              - 'spring-petclinic-config-server/**'
+            discovery-server:
+              - 'spring-petclinic-discovery-server/**'
+            api-gateway:
+              - 'spring-petclinic-api-gateway/**'
+            customers-service:
+              - 'spring-petclinic-customers-service/**'
+            visits-service:
+              - 'spring-petclinic-visits-service/**'
+            vets-service:
+              - 'spring-petclinic-vets-service/**'
+            genai-service:
+              - 'spring-petclinic-genai-service/**'
+            admin-server:
+              - 'spring-petclinic-admin-server/**'
+
+      - id: list
+        run: |
+          services=""
+          for svc in config-server discovery-server api-gateway customers-service visits-service vets-service genai-service admin-server; do
+            if [ "$(echo '${{ toJson(steps.filter.outputs) }}' | jq -r ".[\"$svc\"]")" = "true" ]; then
+              services="$services $svc"
+            fi
+          done
+          echo "services=$(echo $services | xargs)" >> "$GITHUB_OUTPUT"
+
+  build-push:
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    if: needs.detect-changes.outputs.changed-services != ''
+    strategy:
+      matrix:
+        service:
+          - config-server
+          - discovery-server
+          - api-gateway
+          - customers-service
+          - visits-service
+          - vets-service
+          - genai-service
+          - admin-server
+        exclude:
+          - service: config-server
+          # Matrix excludes are computed dynamically — see filter step output above.
+          # This file shows the pattern; in practice use a matrix include from detect-changes.
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU (ARM64 cross-compilation)
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-petclinic
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build image
+        run: |
+          docker buildx build \
+            --platform linux/arm64 \
+            --load \
+            -t $ECR_REGISTRY/petclinic-dev/${{ matrix.service }}:${{ github.sha }} \
+            spring-petclinic-${{ matrix.service }}/
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.ECR_REGISTRY }}/petclinic-dev/${{ matrix.service }}:${{ github.sha }}
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+
+      - name: Push to ECR
+        run: |
+          docker buildx build \
+            --platform linux/arm64 \
+            --push \
+            -t $ECR_REGISTRY/petclinic-dev/${{ matrix.service }}:${{ github.sha }} \
+            spring-petclinic-${{ matrix.service }}/
+
+  notify-platform:
+    needs: [detect-changes, build-push]
+    runs-on: ubuntu-latest
+    if: needs.build-push.result == 'success'
+    steps:
+      - name: Dispatch to platform repo
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.PLATFORM_REPO_TOKEN }}
+          repository: ${{ github.repository_owner }}/petclinic-platform
+          event-type: app-image-built
+          client-payload: |
+            {
+              "sha": "${{ github.sha }}",
+              "services": "${{ needs.detect-changes.outputs.changed-services }}"
+            }

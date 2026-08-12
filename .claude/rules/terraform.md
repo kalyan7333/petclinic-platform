@@ -40,7 +40,7 @@ tags = {
 ## Variable Conventions
 
 - Always include `description` and `type`
-- Use `validation` blocks for constrained values (e.g., environment must be "dev" or "prod")
+- Use `validation` blocks for constrained values (e.g., environment must be "dev")
 - Use `sensitive = true` for any secret values
 - Provide sensible `default` values where appropriate
 
@@ -56,8 +56,8 @@ tags = {
 ## State Management
 
 - Backend: S3 bucket with versioning + DynamoDB for locking
-- State key pattern: `petclinic/{env}/terraform.tfstate`
-- Never store state locally in production
+- State key pattern: `petclinic/dev/terraform.tfstate`
+- Never store state locally
 - Use `terraform_remote_state` data source for cross-module references
 
 ## Workflow

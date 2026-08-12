@@ -31,7 +31,7 @@ docs/
    - Purpose (1-2 sentences)
    - Table of Contents (for docs > 3 sections)
 4. **Code blocks:** Every command must be copy-pasteable. Include the full command, not fragments.
-5. **Environment awareness:** Always specify which env (dev/prod) or use `{env}` placeholder.
+5. **Environment awareness:** This platform is dev-only — use `petclinic-dev` explicitly.
 
 ## Runbook Format
 

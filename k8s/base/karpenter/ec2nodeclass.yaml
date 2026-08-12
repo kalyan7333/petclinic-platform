@@ -1,0 +1,32 @@
+apiVersion: karpenter.k8s.aws/v1beta1
+kind: EC2NodeClass
+metadata:
+  name: petclinic-default
+spec:
+  # Amazon Linux 2023 ARM — matches t4g Graviton nodes
+  amiFamily: AL2023
+
+  # Subnet selector — matches petclinic VPC public subnets
+  subnetSelectorTerms:
+    - tags:
+        kubernetes.io/cluster/petclinic-dev: shared
+
+  # Security group selector — matches EKS node SG
+  securityGroupSelectorTerms:
+    - tags:
+        kubernetes.io/cluster/petclinic-dev: owned
+
+  # Instance profile created by Terraform karpenter module
+  instanceProfile: petclinic-dev-karpenter-node-profile
+
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 20Gi
+        volumeType: gp3
+        encrypted: true
+        deleteOnTermination: true
+
+  tags:
+    Project: petclinic
+    ManagedBy: karpenter

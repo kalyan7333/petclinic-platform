@@ -3,16 +3,20 @@
 This repo contains ALL infrastructure code for deploying Spring Petclinic Microservices to AWS.
 The application repo (spring-petclinic-microservices) is READ-ONLY — never modify it.
 
+**This platform is dev-only.** The prod environment was removed on 2026-08-10 — do not recreate
+`terraform/environments/prod/`, `k8s/overlays/prod/`, `helm-values/prod.yaml`, or prod ArgoCD
+Applications unless explicitly asked.
+
 ## Directory Layout
 
 ```
-terraform/environments/{dev,prod}/   # Root modules (one per environment)
+terraform/environments/dev/          # Root module (dev)
 terraform/modules/{vpc,eks,ecr,rds,dns,secrets,observability,karpenter}/
 helm/petclinic-service/              # Generic Helm chart (shared by all 8 services)
-helm-values/                         # Per-service YAML + per-env (dev.yaml, prod.yaml)
+helm-values/                         # Per-service YAML + per-env (dev.yaml)
 k8s/base/                            # Namespaces, external-secrets CRs
 k8s/argocd/install/                  # ArgoCD installation manifests
-k8s/argocd/applications/{dev,prod}/  # ArgoCD Application CRDs
+k8s/argocd/applications/dev/         # ArgoCD Application CRDs
 .github/workflows/                    # CI pipelines (build + push only, ArgoCD handles CD)
 scripts/                             # Operational scripts
 docs/                                # Architecture docs, runbooks, ADRs
@@ -22,10 +26,10 @@ docs/                                # Architecture docs, runbooks, ADRs
 
 - **Provider:** AWS provider ~> 5.0, region eu-central-1
 - **ECR:** Uses `aws_ecr_repository` in eu-central-1 with lifecycle policies, scan-on-push, and configurable tag immutability
-- **State:** S3 + DynamoDB locking, key pattern: `petclinic/{env}/terraform.tfstate`
+- **State:** S3 + DynamoDB locking, key pattern: `petclinic/dev/terraform.tfstate`
 - **Modules:** All reusable modules in `terraform/modules/`. Environments call modules.
-- **Naming:** `petclinic-{env}-{resource}` (e.g., `petclinic-dev-vpc`, `petclinic-prod-eks`)
-- **Tagging:** Every resource MUST have tags: `Project=petclinic`, `Environment={dev|prod}`, `ManagedBy=terraform`
+- **Naming:** `petclinic-{env}-{resource}` (e.g., `petclinic-dev-vpc`, `petclinic-dev-eks`)
+- **Tagging:** Every resource MUST have tags: `Project=petclinic`, `Environment=dev`, `ManagedBy=terraform`
 - **Variables:** Use `variable` blocks with `description`, `type`, and `default` where sensible
 - **Outputs:** Export IDs, ARNs, and endpoints needed by downstream modules
 - **Sensitive values:** Never hardcode secrets. Use `sensitive = true` for secret outputs.
@@ -34,7 +38,7 @@ docs/                                # Architecture docs, runbooks, ADRs
 
 ## Kubernetes Conventions
 
-- **Namespaces:** `petclinic-dev`, `petclinic-prod` (one namespace per environment)
+- **Namespace:** `petclinic-dev`
 - **Labels:** Every resource: `app.kubernetes.io/name`, `app.kubernetes.io/part-of=petclinic`, `app.kubernetes.io/managed-by=Helm`
 - **Probes:** Every Deployment MUST have readinessProbe and livenessProbe using `/actuator/health/{readiness,liveness}`
 - **Resources:** Every container MUST have requests and limits (memory: 128Mi request / 512Mi limit)
@@ -48,7 +52,7 @@ docs/                                # Architecture docs, runbooks, ADRs
 
 - **Single generic chart** in `helm/petclinic-service/` shared by all 8 services
 - **Per-service config** in `helm-values/{service}.yaml` (ports, env vars, init containers)
-- **Per-env config** in `helm-values/{dev,prod}.yaml` (replicas, HPA, PDB, resource quotas)
+- **Per-env config** in `helm-values/dev.yaml` (replicas, HPA, PDB, resource quotas)
 - **ArgoCD merges values:** service file + env file when deploying
 - **Template outputs** validated with `helm template` before commit
 
@@ -56,9 +60,8 @@ docs/                                # Architecture docs, runbooks, ADRs
 
 - **CI pushes images**, ArgoCD deploys. GitHub Actions NEVER runs `kubectl apply`.
 - **Dev:** auto-sync enabled (prune + self-heal)
-- **Prod:** manual sync required (approval via ArgoCD UI/CLI)
-- **Application CRDs** in `k8s/argocd/applications/{dev,prod}/`
-- **One Application per service per environment** (16 total: 8 services × 2 envs)
+- **Application CRDs** in `k8s/argocd/applications/dev/`
+- **One Application per service** (8 total)
 
 ## Security Rules (NON-NEGOTIABLE)
 
@@ -73,15 +76,15 @@ docs/                                # Architecture docs, runbooks, ADRs
 
 ## AWS Environment Details
 
-| Setting | Dev | Prod |
-|---------|-----|------|
-| Region | eu-central-1 | eu-central-1 |
-| K8s namespace | petclinic-dev | petclinic-prod |
-| State key | petclinic/dev/terraform.tfstate | petclinic/prod/terraform.tfstate |
-| RDS instance | db.t4g.micro, single-AZ (free tier) | db.t4g.micro, single-AZ (free tier) |
-| EKS nodes | 2x t4g.small ARM (Graviton free trial) | 2x t4g.small ARM (Graviton free trial) |
-| Deploy mode | ArgoCD auto-sync | ArgoCD manual sync |
-| Replicas | 1 per service | 2+ per service, HPA |
+| Setting | Dev |
+|---------|-----|
+| Region | eu-central-1 |
+| K8s namespace | petclinic-dev |
+| State key | petclinic/dev/terraform.tfstate |
+| RDS instance | db.t4g.micro, single-AZ (free tier), no backups, no final snapshot |
+| EKS nodes | 2x t4g.small ARM (Graviton free trial) |
+| Deploy mode | ArgoCD auto-sync |
+| Replicas | 1 per service |
 
 ## Application Services (8 total)
 

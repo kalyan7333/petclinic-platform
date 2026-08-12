@@ -1,6 +1,6 @@
 ---
 name: security-auditor
-description: Comprehensive security audit across Terraform, Kubernetes, and CI/CD pipelines. Checks for secrets exposure, IAM over-privilege, missing encryption, and compliance gaps. Use before deploying to production or during security reviews.
+description: Comprehensive security audit across Terraform, Kubernetes, and CI/CD pipelines. Checks for secrets exposure, IAM over-privilege, missing encryption, and compliance gaps. Use before deploying or during security reviews.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
@@ -35,7 +35,7 @@ NEVER run mutating commands (apply, destroy, delete, etc.).
 - Security groups: no unrestricted ingress (0.0.0.0/0) except ALB 80/443
 - RDS SG: only allows 3306 from EKS node SG (not 0.0.0.0/0)
 - EKS API: public endpoint, restricted by CIDR where possible
-- Note: production would use private subnets + NAT Gateway
+- Note: a hardened deployment would use private subnets + NAT Gateway
 
 ### 3. IAM & Access Control
 - IAM policies: least privilege, no wildcard actions or resources
@@ -61,7 +61,6 @@ NEVER run mutating commands (apply, destroy, delete, etc.).
 - No secrets in workflow YAML — use GitHub Secrets and Environment variables
 - AWS auth via OIDC federation (no long-lived access keys)
 - Image scanning in build workflow (Trivy)
-- Approval gates for production deployments (GitHub Environments)
 - Least privilege `permissions:` block in workflows
 
 ## Output Format

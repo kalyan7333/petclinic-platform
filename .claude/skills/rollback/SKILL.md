@@ -12,13 +12,12 @@ Roll back a failed deployment to its previous working revision.
 ## Arguments
 
 - `service` — Service to roll back (e.g., `api-gateway`, `customers-service`) or `all`
-- `env` — Target environment: `dev` or `prod` (default: `dev`)
+- `env` — Target environment: `dev` (the only environment; default: `dev`)
 
 ## Steps
 
 1. Set the namespace:
    - `dev` → `petclinic-dev`
-   - `prod` → `petclinic-prod`
 
 2. Show current rollout status and history:
    ```bash
@@ -32,8 +31,8 @@ Roll back a failed deployment to its previous working revision.
    kubectl rollout history deployment/{service} -n petclinic-{env} --revision={previous}
    ```
 
-4. **For prod: require explicit confirmation.**
-   Show: "Rolling back {service} in PRODUCTION to revision {N}. This will change the running image. Confirm?"
+4. **Require explicit confirmation.**
+   Show: "Rolling back {service} in {env} to revision {N}. This will change the running image. Confirm?"
 
 5. Execute the rollback:
    ```bash
@@ -67,7 +66,7 @@ Roll back a failed deployment to its previous working revision.
 
 ## Important
 
-- Always get explicit confirmation for prod rollbacks
+- Always get explicit confirmation before rolling back
 - When rolling back `all`, go in reverse deployment order
 - If rollback fails, do NOT retry — investigate first
 - Suggest running `/smoke-test {env}` after rollback to verify health

@@ -1,0 +1,106 @@
+# PETPLAT-50 / PETPLAT-87 — GitOps image tag update.
+#
+# The application repo's build-push.yml fires a repository_dispatch at this repo
+# once images are in ECR. This workflow rewrites image.tag in the Helm values and
+# pushes; ArgoCD watches helm-values/ and syncs the change into petclinic-dev.
+#
+# CI only. No kubectl, no helm, no aws eks update-kubeconfig — ArgoCD deploys.
+name: Update Image Tags
+
+on:
+  repository_dispatch:
+    types: [app-image-built]
+
+permissions:
+  contents: write
+
+env:
+  YQ_VERSION: v4.44.3
+
+jobs:
+  update-tags:
+    name: update-tags
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          # Default GITHUB_TOKEN credentials are persisted so the push below works.
+          persist-credentials: true
+
+      - name: Validate dispatch payload
+        env:
+          SHA: ${{ github.event.client_payload.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SHA}" ]; then
+            echo "::error::client_payload.sha is empty — refusing to write an empty image tag"
+            exit 1
+          fi
+          if ! printf '%s' "${SHA}" | grep -Eq '^[0-9a-f]{7,40}$'; then
+            echo "::error::client_payload.sha '${SHA}' is not a git commit SHA"
+            exit 1
+          fi
+          echo "Dispatched SHA: ${SHA}"
+
+      - name: Install yq
+        run: |
+          set -euo pipefail
+          sudo wget -qO /usr/local/bin/yq \
+            "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
+
+      - name: Update image.tag for all services
+        env:
+          SHA: ${{ github.event.client_payload.sha }}
+        run: |
+          set -euo pipefail
+
+          SERVICES=(
+            config-server
+            discovery-server
+            api-gateway
+            customers-service
+            visits-service
+            vets-service
+            genai-service
+            admin-server
+          )
+
+          for svc in "${SERVICES[@]}"; do
+            VALUES_FILE="helm-values/${svc}.yaml"
+            if [ ! -f "${VALUES_FILE}" ]; then
+              echo "::error::${VALUES_FILE} not found — helm-values is out of sync with the service list"
+              exit 1
+            fi
+            yq -i ".image.tag = strenv(SHA)" "${VALUES_FILE}"
+            echo "  ${VALUES_FILE} -> $(yq '.image.tag' "${VALUES_FILE}")"
+          done
+
+      - name: Commit and push updated tags
+        env:
+          SHA: ${{ github.event.client_payload.sha }}
+          SERVICES: ${{ github.event.client_payload.services }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add helm-values/
+
+          if git diff --staged --quiet; then
+            echo "No tag changes — helm-values already at ${SHA}. Nothing to push."
+            exit 0
+          fi
+
+          git commit -m "ci: update image tags to ${SHA} (${SERVICES:-all services})"
+
+          # Another dispatch can land between checkout and push; rebase onto the
+          # remote rather than failing the run.
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+          echo "Pushed $(git rev-parse --short HEAD) — ArgoCD will auto-sync petclinic-dev."

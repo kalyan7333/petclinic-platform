@@ -1,0 +1,38 @@
+# Pod Security Admission labels are applied to namespaces (see namespaces.yaml).
+# This file documents the policy — actual enforcement is via namespace labels.
+#
+# Dev: enforce=baseline, warn=restricted (learn-friendly)
+#
+# Patch the namespace with:
+#   kubectl label namespace petclinic-dev pod-security.kubernetes.io/enforce=baseline
+#   kubectl label namespace petclinic-dev pod-security.kubernetes.io/warn=restricted
+---
+# RBAC — service accounts get no extra cluster permissions by default
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: petclinic-service-role
+  labels:
+    app.kubernetes.io/part-of: petclinic
+    app.kubernetes.io/managed-by: kubectl
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: petclinic-service-rolebinding
+  labels:
+    app.kubernetes.io/part-of: petclinic
+    app.kubernetes.io/managed-by: kubectl
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: petclinic-service-role
+subjects:
+  - kind: Group
+    name: system:serviceaccounts
+    apiGroup: rbac.authorization.k8s.io

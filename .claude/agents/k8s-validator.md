@@ -47,7 +47,6 @@ NEVER run `kubectl apply`, `kubectl delete`, or any mutating command.
 ### Structure
 - [ ] Base manifests are environment-agnostic
 - [ ] Dev overlay: 1 replica, smaller resources
-- [ ] Prod overlay: 2+ replicas, HPA defined, full resource limits
 - [ ] Kustomization.yaml present in overlay directories
 
 ## Output Format

@@ -11,13 +11,12 @@ Run smoke tests against deployed services to verify they are healthy.
 
 ## Arguments
 
-- `env` — Target environment: `dev` or `prod` (default: `dev`)
+- `env` — Target environment: `dev` (the only environment; default: `dev`)
 
 ## Steps
 
 1. Set the namespace based on environment:
    - `dev` → `petclinic-dev`
-   - `prod` → `petclinic-prod`
 
 2. Check if `scripts/smoke-test.sh` exists. If so, run it:
    ```bash
@@ -75,4 +74,4 @@ Run smoke tests against deployed services to verify they are healthy.
 
 - This is a read-only verification — it does not deploy or modify anything
 - Port-forwarding is temporary and cleaned up after each check
-- For prod, consider using the ingress endpoint instead of port-forwarding
+- Consider using the ingress endpoint instead of port-forwarding once the ALB is up

@@ -1,0 +1,40 @@
+# discovery-server — Eureka service registry (PETPLAT-108).
+# Starts second, after config-server.
+# Source of truth: k8s/base/discovery-server/
+
+fullnameOverride: discovery-server
+
+image:
+  name: discovery-server
+  tag: v1.0.0
+
+component: server
+
+containerPort: 8761
+service:
+  port: 8761
+
+springProfiles: "docker"
+
+env:
+  CONFIG_SERVER_URL: "http://config-server:8888"
+
+initContainers:
+  - name: wait-for-config-server
+    image: busybox:1.36
+    imagePullPolicy: Always
+    command: ['sh', '-c', 'until wget -qO- http://config-server:8888/actuator/health; do echo waiting for config-server; sleep 5; done']
+    resources:
+      requests:
+        cpu: 10m
+        memory: 16Mi
+      limits:
+        cpu: 50m
+        memory: 64Mi
+    securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      runAsUser: 1000
+      capabilities:
+        drop: ["ALL"]
+      readOnlyRootFilesystem: true

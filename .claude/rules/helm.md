@@ -45,11 +45,9 @@ Each service file MUST specify:
 ## Per-Environment Values (`helm-values/{env}.yaml`)
 
 - `dev.yaml` — 1 replica, no HPA/PDB, ECR registry `petclinic-dev`
-- `prod.yaml` — 2 replicas, ECR registry `petclinic-prod`; HPA/PDB controlled per-service
 
 **ECR registry** is set in the env file (`image.registry`), not per-service:
 - dev: `533267262133.dkr.ecr.eu-central-1.amazonaws.com/petclinic-dev`
-- prod: `533267262133.dkr.ecr.eu-central-1.amazonaws.com/petclinic-prod`
 
 ## Template Conventions
 
@@ -86,8 +84,8 @@ helm lint helm/petclinic-service/ \
 
 ## Validation Script
 
-Run `scripts/validate-helm.sh` to lint, template, and dry-run all 16 releases (8 services × 2 envs).
-Supports `--env dev|prod` and `--service <name>` filters.
+Run `scripts/validate-helm.sh` to lint, template, and dry-run all 8 releases (8 services × 1 env).
+Supports `--env dev` and `--service <name>` filters.
 
 ## Startup Order
 

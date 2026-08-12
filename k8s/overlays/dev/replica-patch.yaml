@@ -1,0 +1,8 @@
+# Dev runs 1 replica of every service (PETPLAT-45). Applied to all Deployments
+# via a kind selector, so metadata.name here is only a placeholder.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: placeholder
+spec:
+  replicas: 1

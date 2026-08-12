@@ -12,13 +12,12 @@ View logs and debug information for a service in the specified environment.
 ## Arguments
 
 - `service` — Service name (e.g., `config-server`, `api-gateway`, `customers-service`)
-- `env` — Target environment: `dev` or `prod` (default: `dev`)
+- `env` — Target environment: `dev` (the only environment; default: `dev`)
 
 ## Steps
 
 1. Set the namespace based on environment:
    - `dev` → `petclinic-dev`
-   - `prod` → `petclinic-prod`
 
 2. Show pod status for the service:
    ```bash
@@ -66,5 +65,5 @@ View logs and debug information for a service in the specified environment.
 ## Important
 
 - This is read-only — it does not restart or modify anything
-- For prod, be careful with log volume — always use --tail to limit output
+- Be careful with log volume — always use --tail to limit output
 - If service name is omitted, show status of ALL pods in the namespace

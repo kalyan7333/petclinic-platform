@@ -42,7 +42,6 @@ Review workflow YAML files in `.github/workflows/` for syntax, security, and adh
 - [ ] CI does NOT run `kubectl apply` or `helm upgrade` — ArgoCD deploys
 - [ ] CI commits updated image tags to `helm-values/{service}.yaml`
 - [ ] Dev: ArgoCD auto-sync picks up tag changes automatically
-- [ ] Prod: ArgoCD manual sync required (approval via ArgoCD UI/CLI)
 - [ ] On CI failure: workflow does NOT retry automatically
 - [ ] On CI failure: notification step exists (or comment explaining strategy)
 
@@ -57,7 +56,7 @@ Review workflow YAML files in `.github/workflows/` for syntax, security, and adh
   - `AWS_REGION` — target region
   - `ECR_REGISTRY` — ECR registry URL
   - `EKS_CLUSTER_NAME` — EKS cluster name
-- [ ] Environments are used: `dev` (no gates), `prod` (required reviewers)
+- [ ] Environment `dev` is used (no gates — dev-only platform)
 - [ ] No secret names that suggest values stored inline
 
 ### 7. Consistency

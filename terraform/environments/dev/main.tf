@@ -27,8 +27,11 @@ module "eks" {
   cluster_sg_id = module.vpc.eks_cluster_sg_id
   node_sg_id    = module.vpc.eks_node_sg_id
 
+  # t4g.small is the largest Graviton type the FREE account plan allows to
+  # launch; t4g.medium fails with AsgInstanceLaunchFailures / "not eligible for
+  # Free Tier". Raise this once the account is off the free-tier plan.
   node_instance_types = ["t4g.small"]
-  node_ami_type       = "AL2_ARM_64"
+  node_ami_type       = "AL2023_ARM_64_STANDARD"
   node_min_size       = 2
   node_max_size       = 4
   node_desired_size   = 2
@@ -66,29 +69,64 @@ module "rds" {
   subnet_ids        = module.vpc.public_subnet_ids
   security_group_id = module.vpc.rds_sg_id
 
-  instance_class          = "db.t4g.micro"
-  allocated_storage       = 20
-  max_allocated_storage   = 20
-  multi_az                = false
+  instance_class        = "db.t4g.micro"
+  allocated_storage     = 20
+  max_allocated_storage = 20
+  multi_az              = false
+  # PETPLAT-25 AC calls for 7-day retention, but this AWS account is on the
+  # restricted Free Tier plan which rejects retention > 0 with a
+  # FreeTierRestrictionError. Kept at 0 (automated backups disabled) so the
+  # instance can be created. Raise to 7 once the account is off the free-tier plan.
   backup_retention_period = 0
   skip_final_snapshot     = true
   deletion_protection     = false
 }
 
-# E-6: DNS — PETPLAT-32 (set domain_name in terraform.tfvars)
+# E-6: DNS & Ingress — PETPLAT-28/29/31/32
+# Set domain_name in terraform.tfvars. Leave alb_dns_name empty on first apply.
+# After kubectl apply creates the ingress and the ALB is provisioned, set alb_dns_name
+# from `kubectl get ingress -n petclinic-dev petclinic-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`
+# and re-apply to create the Route 53 alias record.
 module "dns" {
   source = "../../modules/dns"
 
+  # DNS (Route 53 + ACM) turns on only when a domain is provided. With no domain
+  # the module still creates the LB-controller IRSA role so the ALB works over HTTP.
+  enable_dns  = var.domain_name != ""
   domain_name = var.domain_name
+  project     = local.project
+  environment = local.env
+  subdomain   = "petclinic-${local.env}"
 
-  count = var.domain_name != "" ? 1 : 0
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
+
+  vpc_id       = module.vpc.vpc_id
+  alb_dns_name = var.alb_dns_name
 }
 
-# E-7: Secrets — PETPLAT-33
+# E-7: Secrets — PETPLAT-33/37
+# Non-RDS application secrets plus the IRSA role used by the External Secrets
+# Operator. RDS credentials live in the rds module (PETPLAT-23).
 module "secrets" {
   source = "../../modules/secrets"
 
   project        = local.project
   environment    = local.env
   openai_api_key = var.openai_api_key
+
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
+}
+
+# E-10: GitHub Actions OIDC federation — PETPLAT-52
+# Trust is scoped to the application repo fork (where build-push.yml runs), not
+# this platform repo. See terraform/modules/github-oidc/main.tf.
+module "github_oidc" {
+  source = "../../modules/github-oidc"
+
+  project     = local.project
+  environment = local.env
+
+  ecr_repository_arns = values(module.ecr.repository_arns)
 }

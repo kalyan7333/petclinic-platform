@@ -1,0 +1,35 @@
+{{ .Release.Name }} deployed to namespace {{ .Values.namespace }}.
+
+  Image:     {{ .Values.image.registry }}/{{ .Values.image.name }}:{{ .Values.image.tag }}
+  Replicas:  {{ .Values.replicaCount }}
+  Port:      {{ .Values.service.port }}
+  HPA:       {{ if .Values.hpa.enabled }}{{ .Values.hpa.minReplicas }}-{{ .Values.hpa.maxReplicas }} pods @ {{ .Values.hpa.targetCPUUtilizationPercentage }}% CPU{{ else }}disabled{{ end }}
+  PDB:       {{ if .Values.pdb.enabled }}minAvailable {{ .Values.pdb.minAvailable }}{{ else }}disabled{{ end }}
+
+Check rollout status:
+
+  kubectl rollout status deployment/{{ include "petclinic-service.fullname" . }} -n {{ .Values.namespace }}
+
+Tail the logs:
+
+  kubectl logs -f deployment/{{ include "petclinic-service.fullname" . }} -n {{ .Values.namespace }}
+
+Port-forward locally:
+
+  kubectl port-forward svc/{{ include "petclinic-service.fullname" . }} -n {{ .Values.namespace }} {{ .Values.service.port }}:{{ .Values.service.port }}
+{{- if .Values.initContainers }}
+
+Pods stay in Init until their dependencies report healthy — deploy in order:
+config-server, then discovery-server, then the rest.
+{{- end }}
+{{- if .Values.secrets }}
+
+Requires these Secrets from External Secrets Operator (bash scripts/install-external-secrets.sh):
+{{- range .Values.secrets }}
+  - {{ .secretName }} (key: {{ .key }})
+{{- end }}
+{{- end }}
+{{- if .Values.hpa.enabled }}
+
+The HPA needs Metrics Server: bash scripts/install-metrics-server.sh
+{{- end }}

@@ -28,3 +28,9 @@ variable "openai_api_key" {
   sensitive   = true
   default     = ""
 }
+
+variable "alb_dns_name" {
+  description = "ALB DNS hostname from the K8s Ingress status (kubectl get ingress petclinic-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'). Set after first apply to create the Route 53 alias record."
+  type        = string
+  default     = ""
+}

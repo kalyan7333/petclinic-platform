@@ -76,15 +76,15 @@ resource "aws_ecr_repository" "this" {
 }
 
 resource "aws_ecr_lifecycle_policy" "this" {
-  for_each = aws_ecr_repository.this
+  for_each = toset(var.service_names)
 
-  repository = each.value.name
+  repository = aws_ecr_repository.this[each.key].name
   policy     = local.lifecycle_policy
 }
 
 resource "aws_ecr_repository_policy" "this" {
-  for_each = aws_ecr_repository.this
+  for_each = toset(var.service_names)
 
-  repository = each.value.name
+  repository = aws_ecr_repository.this[each.key].name
   policy     = local.repository_policy
 }

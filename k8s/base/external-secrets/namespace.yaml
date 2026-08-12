@@ -1,0 +1,13 @@
+# Namespace for the External Secrets Operator controller (PETPLAT-34).
+# Cluster-scoped tooling — not one of the petclinic-{env} application namespaces.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: external-secrets
+  labels:
+    app.kubernetes.io/name: external-secrets
+    app.kubernetes.io/part-of: petclinic
+    app.kubernetes.io/managed-by: kubectl
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/audit: restricted

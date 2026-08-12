@@ -1,0 +1,39 @@
+# Dev environment overrides (PETPLAT-109).
+# Merged AFTER the per-service file:
+#   helm upgrade --install {service} helm/petclinic-service/ \
+#     -f helm-values/{service}.yaml -f helm-values/dev.yaml
+#
+# Anything set here wins over the per-service file, so only put values that are
+# genuinely identical across all eight services here.
+
+namespace: petclinic-dev
+
+image:
+  # Dev ECR project — repositories are petclinic-dev/{service}.
+  registry: 893410593881.dkr.ecr.eu-central-1.amazonaws.com/petclinic-dev
+
+# Every service runs a single replica in dev.
+replicaCount: 1
+
+# No autoscaling and no disruption budgets in dev — a single replica makes both
+# meaningless, and dev has no Metrics Server requirement.
+hpa:
+  enabled: false
+
+pdb:
+  enabled: false
+
+# Matches the `environment: dev` label the kustomize overlay stamped on every
+# resource, so `kubectl get all -l environment=dev` keeps working.
+extraLabels:
+  environment: dev
+
+# Dev RDS endpoint, interpolated into SPRING_DATASOURCE_URL by the three
+# DB-backed services. Fill in with:
+#   terraform -chdir=terraform/environments/dev output -raw rds_endpoint
+rds:
+  endpoint: petclinic-dev-mysql.c3amaagmophh.eu-central-1.rds.amazonaws.com
+
+# Resources are NOT set here on purpose: api-gateway needs a larger CPU envelope
+# than the rest, and a blanket value here would clobber it. Dev uses the chart
+# defaults (100m/128Mi request, 500m/512Mi limit) plus per-service overrides.

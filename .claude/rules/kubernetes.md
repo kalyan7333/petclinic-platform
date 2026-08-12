@@ -19,8 +19,7 @@ k8s/
 │   ├── ingress/              # ALB Ingress Controller
 │   └── external-secrets/     # ExternalSecret CRs
 └── overlays/
-    ├── dev/                  # Dev patches: 1 replica, smaller resources
-    └── prod/                 # Prod patches: 2+ replicas, HPA, larger resources
+    └── dev/                  # Dev patches: 1 replica, smaller resources
 ```
 
 ## Required Labels
@@ -88,11 +87,9 @@ Use init containers to wait for dependencies:
 
 ## Namespaces
 
-- Dev: `petclinic-dev`
-- Prod: `petclinic-prod`
+- Dev: `petclinic-dev` (the only environment)
 - All resources MUST specify their namespace explicitly
 
 ## Overlay Patterns
 
 Dev overlay: single replica, smaller resource requests, relaxed probes
-Prod overlay: 2+ replicas, HPA, full resource limits, strict probes

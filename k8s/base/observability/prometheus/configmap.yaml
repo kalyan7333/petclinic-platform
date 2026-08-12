@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: petclinic
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets: ["alertmanager:9093"]
+
+    rule_files:
+      - /etc/prometheus/rules/*.yml
+
+    scrape_configs:
+      - job_name: prometheus
+        static_configs:
+          - targets: ["localhost:9090"]
+
+      - job_name: petclinic-services
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: [petclinic-dev]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_part_of]
+            action: keep
+            regex: petclinic
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: "true"
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+            target_label: service
+
+  alert-rules.yml: |
+    groups:
+      - name: petclinic-availability
+        rules:
+          - alert: ServiceDown
+            expr: up{job="petclinic-services"} == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Service {{ $labels.service }} is down"
+              description: "{{ $labels.service }} in {{ $labels.namespace }} has been down for 1 minute"
+
+          - alert: HighErrorRate
+            expr: |
+              rate(http_server_requests_seconds_count{status=~"5.."}[5m])
+                / rate(http_server_requests_seconds_count[5m]) > 0.05
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High error rate on {{ $labels.service }}"
+              description: "Error rate > 5% for 5 minutes on {{ $labels.service }}"
+
+          - alert: HighLatency
+            expr: |
+              histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[5m])) > 0.5
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High p95 latency on {{ $labels.service }}"
+              description: "p95 latency > 500ms for 5 minutes on {{ $labels.service }}"
+
+          - alert: PodRestartLoop
+            expr: |
+              increase(kube_pod_container_status_restarts_total{namespace=~"petclinic-.*"}[15m]) > 3
+            for: 0m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Pod restart loop detected"
+              description: "{{ $labels.pod }} restarted > 3 times in 15 minutes"
+
+          - alert: HighMemoryUsage
+            expr: |
+              (container_memory_working_set_bytes{namespace=~"petclinic-.*"}
+                / container_spec_memory_limit_bytes{namespace=~"petclinic-.*"}) > 0.8
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High memory usage on {{ $labels.pod }}"
+              description: "Memory usage > 80% of limit for {{ $labels.pod }}"

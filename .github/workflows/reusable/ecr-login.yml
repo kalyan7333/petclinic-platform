@@ -1,0 +1,36 @@
+name: ECR Login
+
+on:
+  workflow_call:
+    inputs:
+      aws-region:
+        required: false
+        type: string
+        default: eu-central-1
+    secrets:
+      AWS_ACCOUNT_ID:
+        required: true
+    outputs:
+      registry:
+        description: ECR registry URI
+        value: ${{ jobs.login.outputs.registry }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  login:
+    runs-on: ubuntu-latest
+    outputs:
+      registry: ${{ steps.ecr-login.outputs.registry }}
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-petclinic
+          aws-region: ${{ inputs.aws-region }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2

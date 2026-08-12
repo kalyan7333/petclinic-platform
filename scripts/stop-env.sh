@@ -10,18 +10,16 @@ set -euo pipefail
 #
 # Usage:
 #   ./scripts/stop-env.sh dev
-#   ./scripts/stop-env.sh prod
 #
 
 REGION="${AWS_DEFAULT_REGION:-eu-central-1}"
 
 usage() {
   echo "Usage: $0 <environment>"
-  echo "  environment: dev | prod"
+  echo "  environment: dev (the only environment)"
   echo ""
   echo "Examples:"
   echo "  $0 dev      # Stop dev environment"
-  echo "  $0 prod     # Stop prod environment"
   exit 1
 }
 
@@ -30,8 +28,8 @@ if [[ $# -ne 1 ]]; then
 fi
 
 ENV="$1"
-if [[ "$ENV" != "dev" && "$ENV" != "prod" ]]; then
-  echo "Error: environment must be 'dev' or 'prod'"
+if [[ "$ENV" != "dev" ]]; then
+  echo "Error: environment must be 'dev' — this platform is dev-only"
   usage
 fi
 

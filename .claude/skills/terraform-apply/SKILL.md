@@ -11,13 +11,12 @@ Apply a previously saved Terraform plan for the specified environment.
 
 ## Arguments
 
-- `env` — Target environment: `dev` or `prod` (default: `dev`)
+- `env` — Target environment: `dev` (the only environment; default: `dev`)
 
 ## Steps
 
 1. Determine the environment directory:
    - `dev` → `terraform/environments/dev/`
-   - `prod` → `terraform/environments/prod/`
 
 2. Check that `plan.out` exists in the environment directory:
    ```bash
@@ -32,7 +31,6 @@ Apply a previously saved Terraform plan for the specified environment.
 
 4. Ask the user for explicit confirmation before applying:
    - Show: "About to apply plan to **{env}** environment. This will modify AWS resources."
-   - For **prod**: Add extra warning: "This is PRODUCTION. Changes will affect live services."
 
 5. Only after user confirms, apply the saved plan:
    ```bash
@@ -48,5 +46,5 @@ Apply a previously saved Terraform plan for the specified environment.
 
 - NEVER apply without a saved plan file
 - NEVER use `-auto-approve`
-- Always get explicit user confirmation, especially for prod
+- Always get explicit user confirmation before applying
 - If apply fails, show the error and do NOT retry automatically

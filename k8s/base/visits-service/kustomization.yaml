@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Base manifests for visits-service (PETPLAT-41).
+# Namespace, replica count and image tag are set by the environment overlays
+# in k8s/overlays/dev/.
+resources:
+  - serviceaccount.yaml
+  - configmap.yaml
+  - service.yaml
+  - deployment.yaml

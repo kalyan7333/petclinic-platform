@@ -59,6 +59,14 @@ resource "aws_eks_cluster" "this" {
   depends_on = [aws_iam_role_policy_attachment.cluster_eks_policy]
 
   tags = merge(local.tags, { Name = local.cluster_name })
+
+  lifecycle {
+    # bootstrap_cluster_creator_admin_permissions is a create-only field that the
+    # EKS API does not return, so on import Terraform reads the provider default
+    # (true) and would force replacement against our intended false. Ignore it —
+    # it can never legitimately change after cluster creation.
+    ignore_changes = [access_config[0].bootstrap_cluster_creator_admin_permissions]
+  }
 }
 
 # ---- OIDC Provider (required for IRSA) ----

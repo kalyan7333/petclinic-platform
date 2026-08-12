@@ -1,0 +1,17 @@
+{{- if .Values.pdb.enabled }}
+{{- /* Opt-in: helm-values/dev.yaml sets pdb.enabled=false for every service.
+       Single-replica services (genai-service, admin-server) never enable it —
+       minAvailable: 1 against one replica blocks node drains entirely. */}}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "petclinic-service.fullname" . }}-pdb
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "petclinic-service.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "petclinic-service.selectorLabels" . | nindent 6 }}
+{{- end }}

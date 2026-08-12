@@ -11,13 +11,12 @@ Run Terraform init and plan for the specified environment.
 
 ## Arguments
 
-- `env` — Target environment: `dev` or `prod` (default: `dev`)
+- `env` — Target environment: `dev` (the only environment; default: `dev`)
 
 ## Steps
 
 1. Determine the environment directory:
    - `dev` → `terraform/environments/dev/`
-   - `prod` → `terraform/environments/prod/`
 
 2. Run `terraform init` in the environment directory:
    ```bash

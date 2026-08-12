@@ -1,0 +1,27 @@
+# Syncs petclinic/{env}/openai-api-key (plaintext) from Secrets Manager into the
+# K8s Secret `openai-api-key` (PETPLAT-36).
+# ENV_PLACEHOLDER is substituted with dev by scripts/install-external-secrets.sh.
+# Consumed by genai-service through envFromSecret in helm-values/genai-service.yaml.
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: openai-api-key
+  namespace: petclinic-ENV_PLACEHOLDER
+  labels:
+    app.kubernetes.io/name: openai-api-key
+    app.kubernetes.io/part-of: petclinic
+    app.kubernetes.io/managed-by: kubectl
+    app.kubernetes.io/component: infrastructure
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target:
+    name: openai-api-key
+    creationPolicy: Owner
+    deletionPolicy: Retain
+  data:
+    - secretKey: OPENAI_API_KEY
+      remoteRef:
+        key: petclinic/ENV_PLACEHOLDER/openai-api-key

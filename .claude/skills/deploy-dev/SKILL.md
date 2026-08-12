@@ -90,7 +90,7 @@ Deploy services to the petclinic-dev namespace.
 
 ## Important
 
-- This deploys to DEV only — use `/deploy-prod` for production
+- This deploys to DEV — the only environment on this platform
 - Prefer ArgoCD sync when available (standard path after E-17)
 - Monitor the rollout — don't assume success without checking pod status
 - If a deployment fails, show the logs and describe the issue

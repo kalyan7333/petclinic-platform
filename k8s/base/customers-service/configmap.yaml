@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: customers-service-config
+  labels:
+    app.kubernetes.io/name: customers-service
+    app.kubernetes.io/part-of: petclinic
+    app.kubernetes.io/component: service
+    app.kubernetes.io/managed-by: Helm
+data:
+  CONFIG_SERVER_URL: "http://config-server:8888"
+  # Patched per environment by the overlay (k8s/overlays/dev/datasource-patch.yaml).
+  SPRING_DATASOURCE_URL: "jdbc:mysql://petclinic-dev-mysql.c3amaagmophh.eu-central-1.rds.amazonaws.com"

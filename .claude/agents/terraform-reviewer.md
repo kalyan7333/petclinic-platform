@@ -35,9 +35,9 @@ Review Terraform code and provide structured findings. You are READ-ONLY — you
 - [ ] terraform fmt formatting applied
 
 ### Cost Optimization
-- [ ] Right-sized instances for the environment (dev vs prod)
+- [ ] Right-sized instances for dev
 - [ ] Spot instances considered for dev EKS nodes
-- [ ] RDS single-AZ for both dev and prod (cost optimization for learning)
+- [ ] RDS single-AZ (cost optimization for learning)
 - [ ] Lifecycle policies on ECR repos to limit stored images
 - [ ] No NAT Gateway (all-public subnet design saves ~$35/mo)
 

@@ -1,0 +1,134 @@
+# Default values for the generic petclinic-service chart.
+#
+# Merge order (later wins):
+#   1. this file                   — defaults common to all 8 services
+#   2. helm-values/{service}.yaml  — ports, env vars, secrets, init containers
+#   3. helm-values/dev.yaml        — ECR registry, namespace, replicas, RDS
+#                                    endpoint
+#
+# Only dev is deployed today. The HPA and PDB templates stay in the chart and
+# stay conditional (both default to disabled), so a future environment can turn
+# them on per service without touching the templates.
+
+replicaCount: 1
+
+# app.kubernetes.io/component — one of server|gateway|service|admin.
+component: service
+
+image:
+  # Registry + ECR project, set in helm-values/dev.yaml.
+  registry: 893410593881.dkr.ecr.eu-central-1.amazonaws.com/petclinic-dev
+  # Image name only — set per service.
+  name: ""
+  # Commit SHA. CI rewrites this key: `yq -i '.image.tag = "<sha>"'`.
+  # Never `latest` in production — see CLAUDE.md image tag rules.
+  tag: REPLACE_WITH_IMAGE_TAG
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: ""   # defaults to containerPort
+
+containerPort: 8080
+
+namespace: petclinic-dev
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Spring profiles active — e.g. "docker", "docker,mysql", "docker,mysql,production".
+springProfiles: "docker"
+
+# RDS endpoint, set per environment. Referenced from the DB-backed services'
+# SPRING_DATASOURCE_URL, which is rendered through `tpl`.
+rds:
+  endpoint: ""
+
+# Non-secret configuration. Rendered into the ConfigMap and injected into the
+# container as configMapKeyRef env vars. Values may contain Go template
+# expressions referencing .Values (used for the RDS endpoint).
+env: {}
+# Example:
+#   CONFIG_SERVER_URL: "http://config-server:8888"
+
+# Secret-backed environment variables. The Secrets are created by External
+# Secrets Operator (k8s/base/external-secrets/) — never inline secret values.
+secrets: []
+# Example:
+#   - name: SPRING_DATASOURCE_USERNAME
+#     secretName: rds-credentials
+#     key: username
+
+# Startup dependency wait containers, set per service:
+# Config Server -> Discovery Server -> everything else.
+initContainers: []
+
+# Health probe paths (Spring Boot Actuator). Services without readiness/liveness
+# health groups configured (config-server) override these to /actuator/health.
+probes:
+  startup:
+    path: /actuator/health
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+  readiness:
+    path: /actuator/health/readiness
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  liveness:
+    path: /actuator/health/liveness
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# Horizontal Pod Autoscaler — disabled everywhere today. Enabling it requires
+# Metrics Server (PETPLAT-72).
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 70
+  behavior: {}
+
+# Pod Disruption Budget — disabled everywhere today. Never enable one for a
+# single-replica Deployment: minAvailable blocks voluntary evictions entirely.
+pdb:
+  enabled: false
+  minAvailable: 1
+
+# Pod-level security context. Namespaces enforce PSA `baseline` and warn on
+# `restricted` (k8s/base/namespaces.yaml).
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+  # Spring Boot writes to /tmp on startup.
+  readOnlyRootFilesystem: false
+
+serviceAccount:
+  create: true
+  name: ""          # defaults to the release name
+  annotations: {}   # e.g. eks.amazonaws.com/role-arn for IRSA
+
+podAnnotations: {}
+
+# Extra labels applied to all resources.
+extraLabels: {}
+
+# Pin the rendered resource names. Set per service — see the fullname helper in
+# templates/_helpers.tpl for why the release name cannot be relied on.
+fullnameOverride: ""

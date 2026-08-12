@@ -1,0 +1,51 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Dev overlay (PETPLAT-45).
+# Namespace petclinic-dev, 1 replica per service, no HPA, no PDB.
+# Prerequisites (not part of this overlay — see k8s/overlays/README.md):
+#   kubectl apply -f k8s/base/namespaces.yaml
+#   bash scripts/install-external-secrets.sh dev
+
+namespace: petclinic-dev
+
+labels:
+  - pairs:
+      environment: dev
+    includeSelectors: false
+
+resources:
+  - ../../base
+
+patches:
+  # All services run a single replica in dev.
+  - path: replica-patch.yaml
+    target:
+      kind: Deployment
+  # Point the DB-backed services at the dev RDS instance.
+  - path: datasource-patch.yaml
+    target:
+      kind: ConfigMap
+      name: (customers-service|visits-service|vets-service)-config
+
+images:
+  # Base manifests already reference the dev ECR repositories, so dev only
+  # needs the tag rewritten. newTag is the 7-character commit SHA published by
+  # .github/workflows/build-push.yml; the first deploy uses the tag pushed in
+  # PETPLAT-85. Never `latest` — see CLAUDE.md image tag rules.
+  - name: 893410593881.dkr.ecr.eu-central-1.amazonaws.com/petclinic-dev/config-server
+    newTag: REPLACE_WITH_IMAGE_TAG
+  - name: 893410593881.dkr.ecr.eu-central-1.amazonaws.com/petclinic-dev/discovery-server
+    newTag: REPLACE_WITH_IMAGE_TAG
+  - name: 893410593881.dkr.ecr.eu-central-1.amazonaws.com/petclinic-dev/api-gateway
+    newTag: REPLACE_WITH_IMAGE_TAG
+  - name: 893410593881.dkr.ecr.eu-central-1.amazonaws.com/petclinic-dev/customers-service
+    newTag: REPLACE_WITH_IMAGE_TAG
+  - name: 893410593881.dkr.ecr.eu-central-1.amazonaws.com/petclinic-dev/visits-service
+    newTag: REPLACE_WITH_IMAGE_TAG
+  - name: 893410593881.dkr.ecr.eu-central-1.amazonaws.com/petclinic-dev/vets-service
+    newTag: REPLACE_WITH_IMAGE_TAG
+  - name: 893410593881.dkr.ecr.eu-central-1.amazonaws.com/petclinic-dev/genai-service
+    newTag: REPLACE_WITH_IMAGE_TAG
+  - name: 893410593881.dkr.ecr.eu-central-1.amazonaws.com/petclinic-dev/admin-server
+    newTag: REPLACE_WITH_IMAGE_TAG

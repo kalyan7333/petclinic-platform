@@ -26,7 +26,7 @@ Review documentation in `docs/` for quality, completeness, and correctness. Cros
 ### 2. Accuracy
 - [ ] File paths referenced actually exist in the repo
 - [ ] Terraform module names match `terraform/modules/` directory
-- [ ] K8s namespace names match conventions (petclinic-dev, petclinic-prod)
+- [ ] K8s namespace names match conventions (petclinic-dev)
 - [ ] Service names match the 8 known services
 - [ ] Port numbers match application service ports
 - [ ] AWS resource names follow `petclinic-{env}-{resource}` pattern
@@ -36,14 +36,13 @@ Review documentation in `docs/` for quality, completeness, and correctness. Cros
 - [ ] Covers: deploy, rollback, scale up/down, restart service
 - [ ] Covers: RDS failover, secret rotation, certificate renewal
 - [ ] Each procedure has: When, Who, Steps, Verify, Rollback
-- [ ] Includes both dev and prod variants where they differ
 
 ### 4. Completeness — Architecture Doc
 - [ ] Lists all 8 services and their relationships
 - [ ] Describes network topology (VPC, subnets, NAT, ALB)
 - [ ] Describes data flow (request path from user to DB)
 - [ ] Documents EKS cluster configuration
-- [ ] Documents RDS configuration (dev vs prod differences)
+- [ ] Documents RDS configuration
 
 ### 5. Completeness — Incident Playbook
 - [ ] Has escalation matrix (roles, not names)

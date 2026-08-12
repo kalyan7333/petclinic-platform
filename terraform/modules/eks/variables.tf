@@ -15,9 +15,9 @@ variable "environment" {
 }
 
 variable "cluster_version" {
-  description = "Kubernetes version (spec pins 1.29 for dev and prod)"
+  description = "Kubernetes version (1.29 retired by AWS; pinned to 1.34 for dev and prod)"
   type        = string
-  default     = "1.29"
+  default     = "1.34"
 }
 
 variable "public_access_cidrs" {
@@ -48,9 +48,9 @@ variable "node_instance_types" {
 }
 
 variable "node_ami_type" {
-  description = "AMI type for nodes (AL2_ARM_64 for Graviton)"
+  description = "AMI type for nodes (AL2023_ARM_64_STANDARD for Graviton; AL2 is EOL on K8s 1.33+)"
   type        = string
-  default     = "AL2_ARM_64"
+  default     = "AL2023_ARM_64_STANDARD"
 }
 
 variable "node_min_size" {
@@ -78,7 +78,7 @@ variable "node_disk_size" {
 }
 
 variable "addon_versions" {
-  description = "Pinned EKS managed add-on versions. Defaults target Kubernetes 1.29; update deliberately when bumping cluster_version (see module README)."
+  description = "Pinned EKS managed add-on versions. Defaults target Kubernetes 1.34; update deliberately when bumping cluster_version (see module README)."
   type = object({
     coredns            = string
     kube_proxy         = string
@@ -86,10 +86,10 @@ variable "addon_versions" {
     aws_ebs_csi_driver = string
   })
   default = {
-    coredns            = "v1.11.1-eksbuild.9"
-    kube_proxy         = "v1.29.10-eksbuild.3"
-    vpc_cni            = "v1.18.5-eksbuild.1"
-    aws_ebs_csi_driver = "v1.35.0-eksbuild.1"
+    coredns            = "v1.12.4-eksbuild.17"
+    kube_proxy         = "v1.34.6-eksbuild.11"
+    vpc_cni            = "v1.21.2-eksbuild.2"
+    aws_ebs_csi_driver = "v1.62.0-eksbuild.1"
   }
 }
 

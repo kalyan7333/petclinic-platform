@@ -9,24 +9,20 @@ set -euo pipefail
 #
 # Usage:
 #   ./scripts/start-env.sh dev
-#   ./scripts/start-env.sh prod
 #
 
 REGION="${AWS_DEFAULT_REGION:-eu-central-1}"
 
 # Default node counts (adjust if your Terraform uses different values)
 DEV_DESIRED_NODES=2
-PROD_DESIRED_NODES=3
 DEV_MAX_NODES=3
-PROD_MAX_NODES=5
 
 usage() {
   echo "Usage: $0 <environment>"
-  echo "  environment: dev | prod"
+  echo "  environment: dev (the only environment)"
   echo ""
   echo "Examples:"
   echo "  $0 dev      # Start dev environment"
-  echo "  $0 prod     # Start prod environment"
   exit 1
 }
 
@@ -35,18 +31,13 @@ if [[ $# -ne 1 ]]; then
 fi
 
 ENV="$1"
-if [[ "$ENV" != "dev" && "$ENV" != "prod" ]]; then
-  echo "Error: environment must be 'dev' or 'prod'"
+if [[ "$ENV" != "dev" ]]; then
+  echo "Error: environment must be 'dev' — this platform is dev-only"
   usage
 fi
 
-if [[ "$ENV" == "dev" ]]; then
-  DESIRED_NODES=${DEV_DESIRED_NODES}
-  MAX_NODES=${DEV_MAX_NODES}
-else
-  DESIRED_NODES=${PROD_DESIRED_NODES}
-  MAX_NODES=${PROD_MAX_NODES}
-fi
+DESIRED_NODES=${DEV_DESIRED_NODES}
+MAX_NODES=${DEV_MAX_NODES}
 
 CLUSTER_NAME="petclinic-${ENV}"
 NODEGROUP_NAME="petclinic-${ENV}-nodes"

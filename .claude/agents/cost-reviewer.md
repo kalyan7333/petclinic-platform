@@ -1,6 +1,6 @@
 ---
 name: cost-reviewer
-description: Estimates monthly AWS costs for the infrastructure by analyzing Terraform configurations. Compares dev vs prod, identifies top cost drivers, and suggests optimization opportunities. Use when reviewing infrastructure costs or planning budget.
+description: Estimates monthly AWS costs for the infrastructure by analyzing Terraform configurations. Identifies top cost drivers and suggests optimization opportunities. Use when reviewing infrastructure costs or planning budget.
 tools: Read, Grep, Glob
 model: haiku
 ---
@@ -45,9 +45,8 @@ Review infrastructure code for cost implications, estimate monthly spend per env
 
 ## Cost Comparison
 
-Always compare dev vs prod costs and explain why they differ:
+The platform is dev-only. Baseline shape:
 - Dev: single-AZ RDS (db.t4g.micro free tier), 2x t4g.small nodes (Graviton free trial), all-public subnets (no NAT)
-- Prod: single-AZ RDS (db.t4g.micro free tier), 2x t4g.small nodes (Graviton free trial), all-public subnets (no NAT)
 
 ## Output Format
 
@@ -56,15 +55,15 @@ Always compare dev vs prod costs and explain why they differ:
 
 ### Monthly Cost Estimate
 
-| Resource | Dev (monthly) | Prod (monthly) | Notes |
-|----------|--------------|----------------|-------|
-| EKS control plane | $73 | $73 | Fixed cost per cluster |
-| EC2 nodes (2x t4g.small) | $xxx | $xxx | ARM/Graviton free trial |
-| RDS MySQL | $xxx | $xxx | Both single-AZ (Multi-AZ disabled for cost) |
-| NAT Gateway | $0 | $0 | Not used (all-public subnet design) |
-| ALB | $xxx | $xxx | Per-hour + LCU |
-| ... | ... | ... | ... |
-| **Total** | **$xxx** | **$xxx** | |
+| Resource | Dev (monthly) | Notes |
+|----------|--------------|-------|
+| EKS control plane | $73 | Fixed cost per cluster |
+| EC2 nodes (2x t4g.small) | $xxx | ARM/Graviton free trial |
+| RDS MySQL | $xxx | Single-AZ (Multi-AZ disabled for cost) |
+| NAT Gateway | $0 | Not used (all-public subnet design) |
+| ALB | $xxx | Per-hour + LCU |
+| ... | ... | ... |
+| **Total** | **$xxx** | |
 
 ### Top Cost Drivers
 1. {biggest cost item and why}
