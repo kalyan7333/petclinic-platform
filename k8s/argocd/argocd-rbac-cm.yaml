@@ -16,9 +16,12 @@ data:
     p, role:admin, logs, get, *, allow
     p, role:admin, exec, create, */*, allow
 
-    # Developer — view all, sync dev only
+    # Developer — view all, sync dev only.
+    # The application resource is <project>/<app-name>, and dev apps are named
+    # {service}-dev in the `default` project (k8s/argocd/applications/dev/), so
+    # the sync pattern matches on the -dev suffix, not the target namespace.
     p, role:developer, applications, get, */*, allow
-    p, role:developer, applications, sync, */petclinic-dev-*, allow
+    p, role:developer, applications, sync, */*-dev, allow
     p, role:developer, logs, get, */*, allow
     p, role:developer, repositories, get, *, allow
 

@@ -5,6 +5,7 @@ metadata:
   namespace: argocd
   labels:
     app.kubernetes.io/name: admin-server
+    app.kubernetes.io/component: admin
     app.kubernetes.io/part-of: petclinic
     environment: dev
   finalizers:
@@ -12,10 +13,11 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: REPLACE_WITH_PLATFORM_REPO_URL
-    targetRevision: HEAD
+    repoURL: https://github.com/kalyan7333/petclinic-platform.git
+    targetRevision: main
     path: helm/petclinic-service
     helm:
+      releaseName: admin-server
       valueFiles:
         - ../../helm-values/admin-server.yaml
         - ../../helm-values/dev.yaml
@@ -28,5 +30,6 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true
   revisionHistoryLimit: 5

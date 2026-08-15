@@ -1,8 +1,14 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# ArgoCD official install manifest — pin to a specific version
+# ArgoCD official install manifest, vendored at v3.5.1 (PETPLAT-112).
+# install.yaml is the upstream file verbatim — never hand-edit it; re-vendor with:
+#   curl -sL https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml \
+#     -o k8s/argocd/install/install.yaml
 resources:
-  - https://raw.githubusercontent.com/argoproj/argo-cd/v2.10.0/manifests/install.yaml
+  - namespace.yaml
+  - install.yaml
 
+# Upstream install.yaml omits metadata.namespace on its namespaced resources
+# (it expects `kubectl apply -n argocd`), so pin it here for `kubectl apply -k`.
 namespace: argocd

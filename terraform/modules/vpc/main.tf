@@ -159,6 +159,21 @@ resource "aws_security_group_rule" "node_nodeport_from_alb" {
   description              = "NodePort services from ALB"
 }
 
+# The ingress uses alb.ingress.kubernetes.io/target-type: ip, so the ALB sends
+# traffic and health checks straight to the pod IP on the container port —
+# it never passes through a NodePort. Pod ENIs inherit the node security group
+# under the VPC CNI, so without this rule every target reports Target.Timeout.
+# Scoped to api-gateway's 8080: it is the only service the ALB fronts.
+resource "aws_security_group_rule" "node_api_gateway_from_alb" {
+  type                     = "ingress"
+  from_port                = 8080
+  to_port                  = 8080
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.alb.id
+  security_group_id        = aws_security_group.eks_node.id
+  description              = "api-gateway pod port from ALB (target-type: ip)"
+}
+
 # RDS — MySQL from EKS nodes ONLY
 resource "aws_security_group" "rds" {
   name        = "${local.name}-rds-sg"

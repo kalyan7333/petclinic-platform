@@ -125,8 +125,13 @@ module "secrets" {
 module "github_oidc" {
   source = "../../modules/github-oidc"
 
-  project     = local.project
-  environment = local.env
+  project           = local.project
+  environment       = local.env
+  github_owner      = "kalyan7333"
+  github_owner_id   = "144237510"
+  app_repository    = "spring-petclinic-microservices"
+  app_repository_id = "1331741579"
+  allowed_branch    = "main"
 
   ecr_repository_arns = values(module.ecr.repository_arns)
 }

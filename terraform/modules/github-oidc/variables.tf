@@ -23,6 +23,20 @@ variable "github_owner" {
   }
 }
 
+# Numeric account ID, not the username. GitHub embeds it in the immutable
+# subject claim so a recycled username cannot inherit this role's trust.
+#   curl -s https://api.github.com/users/kalyan7333 | jq .id
+variable "github_owner_id" {
+  description = "Numeric GitHub account ID of github_owner (immutable subject claim)"
+  type        = string
+  default     = "144237510"
+
+  validation {
+    condition     = can(regex("^[0-9]+$", var.github_owner_id))
+    error_message = "github_owner_id must be the numeric GitHub account ID."
+  }
+}
+
 variable "app_repository" {
   description = <<-EOT
     Application repo name the CI workflow runs in. The trust policy is scoped to
@@ -31,6 +45,18 @@ variable "app_repository" {
   EOT
   type        = string
   default     = "spring-petclinic-microservices"
+}
+
+#   curl -s https://api.github.com/repos/kalyan7333/spring-petclinic-microservices | jq .id
+variable "app_repository_id" {
+  description = "Numeric GitHub repo ID of app_repository (immutable subject claim)"
+  type        = string
+  default     = "1331741579"
+
+  validation {
+    condition     = can(regex("^[0-9]+$", var.app_repository_id))
+    error_message = "app_repository_id must be the numeric GitHub repository ID."
+  }
 }
 
 variable "allowed_branch" {

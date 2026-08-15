@@ -11,7 +11,7 @@ locals {
   # The workflow that assumes this role (build-push.yml) runs in the application
   # repo, so the subject names that repo — not petclinic-platform. Pinning to a
   # single ref means PRs and other branches cannot mint credentials.
-  allowed_subject = "repo:${var.github_owner}/${var.app_repository}:ref:refs/heads/${var.allowed_branch}"
+  allowed_subject = "repo:${var.github_owner}@${var.github_owner_id}/${var.app_repository}@${var.app_repository_id}:ref:refs/heads/${var.allowed_branch}"
 
   oidc_provider_arn = var.create_oidc_provider ? aws_iam_openid_connect_provider.github[0].arn : data.aws_iam_openid_connect_provider.github[0].arn
 }
