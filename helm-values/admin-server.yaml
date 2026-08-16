@@ -2,22 +2,16 @@
 # Source of truth: k8s/base/admin-server/
 
 fullnameOverride: admin-server
-
 image:
   name: admin-server
-  tag: v1.0.0
-
+  tag: 7d66cd0
 component: admin
-
 containerPort: 9090
 service:
   port: 9090
-
 springProfiles: "docker"
-
 env:
   CONFIG_SERVER_URL: "http://config-server:8888"
-
 initContainers:
   - name: wait-for-config-server
     image: busybox:1.36

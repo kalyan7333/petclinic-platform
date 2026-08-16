@@ -2,29 +2,22 @@
 # Source of truth: k8s/base/genai-service/
 
 fullnameOverride: genai-service
-
 image:
   name: genai-service
-  tag: v1.0.0
-
+  tag: 7d66cd0
 component: service
-
 containerPort: 8084
 service:
   port: 8084
-
 springProfiles: "docker,production"
-
 env:
   CONFIG_SERVER_URL: "http://config-server:8888"
-
 # K8s Secret `openai-api-key`, synced from Secrets Manager by External Secrets
 # Operator — see k8s/base/external-secrets/openai-api-key.yaml.
 secrets:
   - name: OPENAI_API_KEY
     secretName: openai-api-key
     key: OPENAI_API_KEY
-
 initContainers:
   - name: wait-for-config-server
     image: busybox:1.36

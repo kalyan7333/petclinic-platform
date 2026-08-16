@@ -3,25 +3,18 @@
 # Source of truth: k8s/base/config-server/
 
 fullnameOverride: config-server
-
 image:
   name: config-server
-  tag: v1.0.0
-
+  tag: 7d66cd0
 component: server
-
 containerPort: 8888
 service:
   port: 8888
-
 springProfiles: "docker"
-
 env:
   GIT_REPO: "https://github.com/spring-petclinic/spring-petclinic-microservices-config"
-
 # First in the startup order — nothing to wait for.
 initContainers: []
-
 # Config Server has no readiness/liveness health groups configured, so all three
 # probes use the aggregate endpoint (matches k8s/base/config-server/deployment.yaml).
 probes:

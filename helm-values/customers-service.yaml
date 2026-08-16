@@ -2,24 +2,18 @@
 # Source of truth: k8s/base/customers-service/
 
 fullnameOverride: customers-service
-
 image:
   name: customers-service
-  tag: v1.0.0
-
+  tag: 7d66cd0
 component: service
-
 containerPort: 8081
 service:
   port: 8081
-
 springProfiles: "docker,mysql"
-
 env:
   CONFIG_SERVER_URL: "http://config-server:8888"
   # rds.endpoint is set per environment in helm-values/dev.yaml.
   SPRING_DATASOURCE_URL: "jdbc:mysql://{{ .Values.rds.endpoint }}:3306/petclinic?useSSL=false&serverTimezone=UTC&useLegacyDatetimeCode=false"
-
 # K8s Secret `rds-credentials`, synced from Secrets Manager by External Secrets
 # Operator — see k8s/base/external-secrets/rds-credentials.yaml.
 secrets:
@@ -29,7 +23,6 @@ secrets:
   - name: SPRING_DATASOURCE_PASSWORD
     secretName: rds-credentials
     key: password
-
 initContainers:
   - name: wait-for-config-server
     image: busybox:1.36
