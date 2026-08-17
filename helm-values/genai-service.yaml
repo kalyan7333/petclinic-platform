@@ -5,6 +5,7 @@ fullnameOverride: genai-service
 image:
   name: genai-service
   tag: 27d603c
+  pullPolicy: IfNotPresent
 component: service
 containerPort: 8084
 service:
@@ -21,7 +22,7 @@ secrets:
 initContainers:
   - name: wait-for-config-server
     image: busybox:1.36
-    imagePullPolicy: IfNotPresent
+    imagePullPolicy: Always
     command: ['sh', '-c', 'until wget -qO- http://config-server:8888/actuator/health; do echo waiting for config-server; sleep 5; done']
     resources:
       requests:
