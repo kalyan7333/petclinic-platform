@@ -4,7 +4,7 @@
 fullnameOverride: customers-service
 image:
   name: customers-service
-  tag: 7d66cd0
+  tag: 72fadf1
 component: service
 containerPort: 8081
 service:
