@@ -4,7 +4,7 @@
 fullnameOverride: admin-server
 image:
   name: admin-server
-  tag: 72fadf1
+  tag: v1.0.0
 component: admin
 containerPort: 9090
 service:

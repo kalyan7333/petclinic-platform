@@ -6,7 +6,7 @@
 fullnameOverride: vets-service
 image:
   name: vets-service
-  tag: 72fadf1
+  tag: 7d66cd0
 component: service
 containerPort: 8083
 service:

@@ -16,6 +16,10 @@ permissions:
 
 env:
   YQ_VERSION: v4.44.3
+  # The eight services that have a helm-values file. client_payload.services is
+  # untrusted input that becomes a file path below, so it is checked against this
+  # list first.
+  KNOWN_SERVICES: "config-server discovery-server api-gateway customers-service visits-service vets-service genai-service admin-server"
 
 jobs:
   update-tags:
@@ -32,6 +36,7 @@ jobs:
       - name: Validate dispatch payload
         env:
           SHA: ${{ github.event.client_payload.sha }}
+          SERVICES: ${{ github.event.client_payload.services }}
         run: |
           set -euo pipefail
           if [ -z "${SHA}" ]; then
@@ -42,7 +47,25 @@ jobs:
             echo "::error::client_payload.sha '${SHA}' is not a git commit SHA"
             exit 1
           fi
+
+          # A build only pushes images for the services whose source changed, so
+          # only those services may have their tag rewritten. Rewriting all eight
+          # points the untouched seven at a tag that was never built.
+          if [ -z "$(printf '%s' "${SERVICES}" | xargs)" ]; then
+            echo "::error::client_payload.services is empty — nothing to update"
+            exit 1
+          fi
+          for svc in ${SERVICES}; do
+            case " ${KNOWN_SERVICES} " in
+              *" ${svc} "*) ;;
+              *)
+                echo "::error::unknown service '${svc}' in client_payload.services"
+                exit 1
+                ;;
+            esac
+          done
           echo "Dispatched SHA: ${SHA}"
+          echo "Services to update: ${SERVICES}"
 
       - name: Install yq
         run: |
@@ -52,24 +75,14 @@ jobs:
           sudo chmod +x /usr/local/bin/yq
           yq --version
 
-      - name: Update image.tag for all services
+      - name: Update image.tag for the dispatched services
         env:
           SHA: ${{ github.event.client_payload.sha }}
+          SERVICES: ${{ github.event.client_payload.services }}
         run: |
           set -euo pipefail
 
-          SERVICES=(
-            config-server
-            discovery-server
-            api-gateway
-            customers-service
-            visits-service
-            vets-service
-            genai-service
-            admin-server
-          )
-
-          for svc in "${SERVICES[@]}"; do
+          for svc in ${SERVICES}; do
             VALUES_FILE="helm-values/${svc}.yaml"
             if [ ! -f "${VALUES_FILE}" ]; then
               echo "::error::${VALUES_FILE} not found — helm-values is out of sync with the service list"
@@ -96,7 +109,7 @@ jobs:
             exit 0
           fi
 
-          git commit -m "ci: update image tags to ${SHA} (${SERVICES:-all services})"
+          git commit -m "ci: update image tags to ${SHA} (${SERVICES})"
 
           # Another dispatch can land between checkout and push; rebase onto the
           # remote rather than failing the run.

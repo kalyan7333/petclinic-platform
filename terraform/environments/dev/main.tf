@@ -34,8 +34,14 @@ module "eks" {
   node_ami_type       = "AL2023_ARM_64_STANDARD"
   node_min_size       = 2
   node_max_size       = 4
-  node_desired_size   = 2
-  node_disk_size      = 20
+  # 4 nodes, not 2: t4g.small caps out at 11 pods per node (3 ENIs x 4 IPs - 1),
+  # and the cluster add-ons (ArgoCD 7, ESO 3, LB controller 2, coredns 2, plus
+  # 2 DaemonSet pods per node) fill all 22 slots on a 2-node cluster, leaving
+  # none for the 8 services. This is an ENI/IP limit, not CPU or memory — both
+  # sit under 30% utilised. Raise node count rather than instance size: t4g.small
+  # is the free-tier ceiling and arm64 is required by every image.
+  node_desired_size = 4
+  node_disk_size    = 20
 }
 
 # E-4: ECR — PETPLAT-20

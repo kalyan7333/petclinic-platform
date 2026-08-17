@@ -5,7 +5,7 @@
 fullnameOverride: api-gateway
 image:
   name: api-gateway
-  tag: 72fadf1
+  tag: v1.0.0
 component: gateway
 containerPort: 8080
 service:
