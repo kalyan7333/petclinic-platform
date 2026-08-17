@@ -4,7 +4,7 @@
 fullnameOverride: visits-service
 image:
   name: visits-service
-  tag: v1.0.0
+  tag: 283ca61
 component: service
 containerPort: 8082
 service:
