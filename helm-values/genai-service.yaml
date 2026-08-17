@@ -4,7 +4,7 @@
 fullnameOverride: genai-service
 image:
   name: genai-service
-  tag: v1.0.0
+  tag: 27d603c
 component: service
 containerPort: 8084
 service:
